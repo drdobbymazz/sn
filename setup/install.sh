@@ -23,7 +23,7 @@ fi
 
 say "Installing packages"
 pkg update -y
-pkg install -y python termux-api git
+pkg install -y python python-pip termux-api git
 
 say "Setting up shared storage"
 if [ -d "$HOME/storage" ]; then
@@ -35,8 +35,16 @@ else
 fi
 
 say "Installing sn"
-pip install --upgrade pip >/dev/null
-pip install -e "$REPO"
+# Never upgrade pip here. Termux ships pip through the python-pip package and
+# refuses to let pip replace itself:
+#   ERROR: Installing pip is forbidden, this will break the python-pip package
+# Use `pkg upgrade python-pip` if pip itself is ever genuinely out of date.
+if ! pip install -e "$REPO"; then
+    warn "pip could not install sn. Things worth trying, in order:"
+    warn "  pkg upgrade python-pip"
+    warn "  pip install -e $REPO"
+    exit 1
+fi
 
 say "Configuration"
 mkdir -p "$CONFIG_DIR"
