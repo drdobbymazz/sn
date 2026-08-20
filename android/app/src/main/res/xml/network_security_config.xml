@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ollama over Tailscale is plain HTTP on port 11434. Android has blocked
+  cleartext by default since Android 9, so without this the app cannot reach
+  the model at all.
+
+  The tailnet is already encrypted end to end by WireGuard, so this is not the
+  exposure it would normally be — but it does apply to any host, because the
+  Ollama address is configurable and MagicDNS names vary per tailnet.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

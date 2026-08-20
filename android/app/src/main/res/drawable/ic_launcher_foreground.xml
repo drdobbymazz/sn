@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A lowercase "sn" mark, drawn as strokes so it stays crisp at any size. -->
+    <path
+        android:pathData="M46,42c-2,-4 -12,-5 -14,0c-2,5 6,7 10,9c5,2 8,5 6,10c-3,6 -14,5 -17,0"
+        android:strokeColor="#E8EAF2"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+    <path
+        android:pathData="M58,64L58,42M58,52c0,-8 6,-11 11,-11c6,0 9,4 9,11l0,12"
+        android:strokeColor="#E8EAF2"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+</vector>

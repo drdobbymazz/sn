@@ -3,21 +3,45 @@
 A personal agent that runs *on* a Samsung Galaxy S23 Ultra, not in a data centre.
 
 The model lives on your laptop under Ollama and is reached over Tailscale. The
-agent itself — the loop, the tools, the conversation history — runs on the phone
-inside Termux, so it can read your messages, check your calendar, look through
-your files and take a photo. Nothing about your phone leaves the tailnet.
+agent itself — the loop, the tools, the conversation history — runs on the phone,
+so it can read your messages, check your calendar, look through your files and
+take a photo. Nothing about your phone leaves the tailnet.
+
+There are two builds:
+
+| | [**Android app**](android/) | [Termux CLI](#termux-cli) |
+| --- | --- | --- |
+| Interface | Compose chat, widget | terminal, home screen scripts |
+| Notifications | full stream, captured to a database | not available |
+| Calendar | runtime permission | needs a one-off ADB grant |
+| Proactive alerts | yes | no |
+| Install | build an APK | `git clone` and run a script |
+| Scriptable | no | yes — `sn ask -q` in any pipe |
+
+**The Android app is the primary build.** The Termux CLI is kept because it is
+genuinely useful for scripting and for debugging the model connection, and it
+costs nothing to leave in place.
 
 ```
-  phone (Termux)                          laptop
-  ┌────────────────────────┐              ┌──────────────┐
-  │ sn                     │   Tailscale  │              │
-  │  agent loop  ──────────┼──────────────┤   Ollama     │
-  │  tools ── termux-api   │   :11434     │   qwen3:8b   │
-  │  sqlite history        │              │              │
-  └────────────────────────┘              └──────────────┘
+  phone                                   laptop
+  ┌────────────────────────────┐          ┌──────────────┐
+  │ sn                         │ Tailscale│              │
+  │   agent loop ──────────────┼──────────┤   Ollama     │
+  │   tools ─ Android APIs     │  :11434  │   qwen3:8b   │
+  │           or termux-api    │          │              │
+  │   history, audit log       │          └──────────────┘
+  └────────────────────────────┘
+     messages · contacts · calendar · notifications
+     files · camera · location · device state
 ```
 
-## Install
+## Android app
+
+See [android/README.md](android/README.md) for building and setup. In short:
+open `android/` in Android Studio, run it onto the phone, then set your laptop's
+Tailscale name in Settings and tap **Test connection**.
+
+## Termux CLI
 
 On the laptop, make Ollama listen on the tailnet rather than only on localhost,
 and pull a model that can call tools:
@@ -114,19 +138,26 @@ it. A model without tool support can only chat — `sn doctor` will tell you.
 
 ## Documentation
 
-- [docs/permissions.md](docs/permissions.md) — the Android permissions, including
-  the calendar one that needs ADB
-- [docs/automation.md](docs/automation.md) — scheduled briefings, wake locks,
-  running on boot
-- [docs/architecture.md](docs/architecture.md) — how it fits together, and how to
-  add a tool
+- [android/README.md](android/README.md) — the Android app: building, setup,
+  the notification stream, proactive alerts
+- [docs/permissions.md](docs/permissions.md) — Termux permissions, including the
+  calendar one that needs ADB (the app asks at runtime instead)
+- [docs/automation.md](docs/automation.md) — Termux scheduling, wake locks, boot
+- [docs/architecture.md](docs/architecture.md) — how the Termux build fits
+  together, and how to add a tool
 
 ## Development
 
 ```sh
-pip install -e ".[dev]"
-pytest
+pip install -e ".[dev]"   # Termux CLI
+pytest                    # 52 tests
+
+cd android
+./gradlew :core:test      # agent core, 67 tests, no Android SDK needed
 ```
 
-The tests run off-device: `SN_TERMUX_STUB` points the termux-api layer at a
-directory of canned JSON, so the tool code is exercised on a laptop.
+Both suites run off-device. For the CLI, `SN_TERMUX_STUB` points the termux-api
+layer at a directory of canned JSON. For the app, the agent core is a pure-Kotlin
+module with no Android imports, so the loop, the Ollama protocol and the argument
+handling are tested on a plain JVM — including the whole tool-calling loop
+against a real HTTP server.
