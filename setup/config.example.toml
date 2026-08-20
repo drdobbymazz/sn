@@ -1,0 +1,63 @@
+# sn configuration — copy to ~/.config/sn/config.toml
+#
+# The only value you must change is ollama.host.
+
+[ollama]
+# Your laptop's Tailscale name. Find it with `tailscale status` on the laptop,
+# or in the Tailscale app on the phone. The MagicDNS name is stable; the
+# 100.x.y.z address works too but changes if you re-add the machine.
+host = "http://laptop.tailnet-name.ts.net:11434"
+
+# Must be a model that can call tools. Good options, roughly by size:
+#   qwen3:8b          solid tool use, fits comfortably on a laptop
+#   llama3.1:8b       reliable, a little more verbose
+#   qwen3:14b         better judgement if you have the VRAM
+#   mistral-nemo      good long-context option
+model = "qwen3:8b"
+
+# Generous, because the first request after the laptop wakes has to load the
+# model into VRAM.
+timeout = 180
+
+# How long Ollama keeps the model resident after a request. Longer means the
+# second question of the day is fast; shorter frees the laptop's memory.
+keep_alive = "30m"
+
+[ollama.options]
+# Passed straight to Ollama. Raise num_ctx if long conversations get truncated.
+temperature = 0.4
+num_ctx = 8192
+
+[agent]
+# How many tool round trips before the agent gives up on a question.
+max_steps = 8
+# How many past messages are replayed into a resumed conversation.
+history_turns = 20
+
+# Uncomment to change how the agent behaves. The default already tells it to
+# keep answers short, since you are reading them on a phone.
+# system_prompt = """
+# You are sn ...
+# """
+
+[tools]
+# Tools that ask before running. Removing a name here means that tool fires
+# without asking — think about that one before doing it for sms_send.
+confirm = [
+    "sms_send",
+    "call_place",
+    "camera_photo",
+    "calendar_create_event",
+    "notification_send",
+]
+
+# Tools switched off entirely. The agent is not told they exist.
+disabled = []
+
+# Directories the file tools may read. Everything else is refused, including
+# paths reached through symlinks or `..`.
+file_roots = ["~/storage/shared", "~/storage/dcim", "~"]
+
+# Caps, so one tool call cannot fill the model's context window.
+max_file_bytes = 200000
+max_rows = 50
